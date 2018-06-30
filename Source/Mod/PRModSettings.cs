@@ -65,7 +65,7 @@ namespace ProgressRenderer
                 Find.WindowStack.Add(new FloatMenu(menuEntries));
             }
             ls.Gap();
-            ls.SliderLabeled("LPR_SettingsPixelPerCellLabel".Translate(), ref pixelPerCell, 1, 50, "LPR_SettingsPixelPerCellDescription".Translate());
+            ls.SliderLabeled("LPR_SettingsPixelPerCellLabel".Translate(), ref pixelPerCell, 1, 64, "LPR_SettingsPixelPerCellDescription".Translate());
             ls.Gap();
             ls.TextFieldLabeled("LPR_SettingsExportPathLabel".Translate(), ref exportPath, "LPR_SettingsExportPathDescription".Translate());
 

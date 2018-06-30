@@ -10,6 +10,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Collections;
 using RimWorld.Planet;
+using Harmony;
 
 namespace ProgressRenderer
 {
@@ -61,10 +62,14 @@ namespace ProgressRenderer
             {
                 return;
             }
-            // Start rendering
+            // Update lastRenderedDay
             lastRenderedDay = currDay;
-            Find.CameraDriver.StartCoroutine(DoRendering());
-            LongEventHandler.QueueLongEvent(new Action(StartRendering), "LPR_Rendering", false, null);
+            // Start rendering if it is enabled
+            if (PRModSettings.enabled)
+            {
+                //LongEventHandler.QueueLongEvent(new Action(StartRendering), "LPR_Rendering", false, null);
+                Find.CameraDriver.StartCoroutine(DoRendering());
+            }
         }
 
         public override void ExposeData()
@@ -96,56 +101,66 @@ namespace ProgressRenderer
                 CameraJumper.TryHideWorld();
             }
 
-            // Calculate camera positions
-            float cameraPosX = (float)map.Size.x / 2;
-            float cameraPosZ = (float)map.Size.z / 2;
-            float cameraWidth = (float)map.Size.x;
-            float cameraHeight = (float)map.Size.z;
-            float orthographicSize = Math.Min(cameraWidth, cameraHeight) / 2;
-            
-            int imageWidth = (int)cameraWidth * PRModSettings.pixelPerCell;
-            int imageHeight = (int)cameraHeight * PRModSettings.pixelPerCell;
+            // Calculate basic values that are used for rendering
+            int imageWidth = map.Size.x * PRModSettings.pixelPerCell;
+            int imageHeight = map.Size.z * PRModSettings.pixelPerCell;
 
-            RenderTexture rt = new RenderTexture(imageWidth, imageHeight, 32, RenderTextureFormat.ARGB32);
+            int renderCountX = (int)Math.Ceiling((float)imageWidth / 4096);
+            int renderCountZ = (int)Math.Ceiling((float)imageHeight / 4096);
+            int renderWidth = (int)Math.Ceiling((float)imageWidth / renderCountX);
+            int renderHeight = (int)Math.Ceiling((float)imageHeight / renderCountZ);
+
+            float cameraPosX = (float)map.Size.x / 2 / renderCountX;
+            float cameraPosZ = (float)map.Size.z / 2 / renderCountZ;
+            float orthographicSize = Math.Min(cameraPosX, cameraPosZ);
+            Vector3 cameraPos = new Vector3(cameraPosX, 15f + (orthographicSize - 11f) / 49f * 50f, cameraPosZ);
+
+            RenderTexture renderTexture = new RenderTexture(renderWidth, renderHeight, 24);
             Texture2D imageTexture = new Texture2D(imageWidth, imageHeight, TextureFormat.RGB24, false);
 
             Camera camera = Find.Camera;
             CameraDriver camDriver = camera.GetComponent<CameraDriver>();
+            camDriver.enabled = false;
 
             // Store current camera data
             Vector3 rememberedRootPos = map.rememberedCameraPos.rootPos;
             float rememberedRootSize = map.rememberedCameraPos.rootSize;
             float rememberedFarClipPlane = camera.farClipPlane;
 
-            camDriver.enabled = false;
-
-            Vector3 cameraPos = new Vector3(cameraPosX, rememberedRootPos.y, cameraPosZ);
-
-            // Set values in the first frame to refresh the cache later
-            camDriver.SetRootPosAndSize(cameraPos, orthographicSize);
-            // Extend farClipPlane to new distance
-            camera.farClipPlane = camera.transform.position.y + 6.5f;
-            // Reset values directly on the camera to avoid display flashing
-            camera.orthographicSize = rememberedRootSize;
-            camera.transform.position = rememberedRootPos;
+            // Overwrite current view rect in the camera driver
+            Traverse.Create(camDriver).Field("lastViewRect").SetValue(new CellRect(0, 0, map.Size.x, map.Size.z));
             yield return new WaitForEndOfFrame();
 
-            // Set values again for the second frame (the final rendering frame)
-            camDriver.SetRootPosAndSize(cameraPos, orthographicSize);
-            yield return new WaitForEndOfFrame();
+            // Set camera values needed for rendering
+            camera.orthographicSize = orthographicSize;
+            camera.farClipPlane = cameraPos.y + 6.5f;
+            
+            // Create a temporary camera for rendering
+            /*Camera tmpCam = Camera.Instantiate(camera);
+            tmpCam.orthographicSize = orthographicSize;
+            tmpCam.farClipPlane = cameraPos.y + 6.5f;*/
 
-            camera.targetTexture = rt;
-            RenderTexture.active = rt;
+            // Set render textures
+            //tmpCam.targetTexture = renderTexture;
+            camera.targetTexture = renderTexture;
+            RenderTexture.active = renderTexture;
 
             // Render the image texture
             if (PRModSettings.renderWeather)
             {
                 map.weatherManager.DrawAllWeather();
             }
-            camera.Render();
+            for (int i = 0; i < renderCountZ; i++)
+            {
+                for (int j = 0; j < renderCountX; j++)
+                {
+                    camera.transform.position = new Vector3(cameraPos.x * (2 * j + 1), cameraPos.y, cameraPos.z * (2 * i + 1));
+                    camera.Render();
+                    imageTexture.ReadPixels(new Rect(0, 0, renderWidth, renderHeight), renderWidth * j, renderHeight * i, false);
+                }
+            }
 
-            // Safe image to file
-            imageTexture.ReadPixels(new Rect(0, 0, imageWidth, imageHeight), 0, 0, false);
+            // Encode and safe image to file
             imageTexture.Apply();
             byte[] encodedImage;
             if (PRModSettings.imageFormat == "PNG")
@@ -160,10 +175,11 @@ namespace ProgressRenderer
 
             // Restore camera and viewport
             RenderTexture.active = null;
+            //tmpCam.targetTexture = null;
             camera.targetTexture = null;
             camera.farClipPlane = rememberedFarClipPlane;
             camDriver.SetRootPosAndSize(rememberedRootPos, rememberedRootSize);
-            camera.GetComponent<CameraDriver>().enabled = true;
+            camDriver.enabled = true;
 
             // Switch back to world view if needed
             if (rememberedWorldRendered)
@@ -176,6 +192,7 @@ namespace ProgressRenderer
             {
                 Current.Game.CurrentMap = rememberedMap;
             }
+            yield break;
         }
 
         private string CreateCurrentFilePath()
