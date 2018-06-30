@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+
+  <!-- General -->
+	<LPR_Rendering>Rendering map image</LPR_Rendering>
+
+  <!-- Settings -->
+	<LPR_SettingsCategory>Progress Renderer</LPR_SettingsCategory>
+	<LPR_SettingsEnabledLabel>Enabled</LPR_SettingsEnabledLabel>
+	<LPR_SettingsEnabledDescription>When enabled, this mod takes automatic screenshots of current maps while playing with the settings below. You can temporary disable this here so you don't have to remove the mod each time.</LPR_SettingsEnabledDescription>
+	<LPR_SettingsRenderWeatherLabel>Render weather</LPR_SettingsRenderWeatherLabel>
+	<LPR_SettingsRenderWeatherDescription>Enable this when the rendered screenshots should contain the current ingame weather.</LPR_SettingsRenderWeatherDescription>
+	<LPR_SettingsIntervalLabel>Render interval (every X days)</LPR_SettingsIntervalLabel>
+	<LPR_SettingsIntervalDescription>Choose the render interval, so how often a progress image should be taken. For example "1" makes a picture each day while "15" makes one each quadrum.</LPR_SettingsIntervalDescription>
+	<LPR_SettingsTimeOfDayLabel>Render time of the day</LPR_SettingsTimeOfDayLabel>
+	<LPR_SettingsTimeOfDayDescription>Choose at which time (in hours) of the selected days the rendering should happen.</LPR_SettingsTimeOfDayDescription>
+	<LPR_SettingsImageFormatLabel>Exported image format</LPR_SettingsImageFormatLabel>
+	<LPR_SettingsPixelPerCellLabel>Pixel per cell (for image resolution)</LPR_SettingsPixelPerCellLabel>
+	<LPR_SettingsPixelPerCellDescription>Define with how many pixels each ingame map cell should be displayed on the rendered image.</LPR_SettingsPixelPerCellDescription>
+	<LPR_SettingsExportPathLabel>Export path</LPR_SettingsExportPathLabel>
+	<LPR_SettingsExportPathDescription>The path where rendered images will be saved. Note that this must be a valid path to an existing and accessible directory on your computer. You can copy+paste a directory from your file explorer here for simple editing.</LPR_SettingsExportPathDescription>
+
+</LanguageData>
