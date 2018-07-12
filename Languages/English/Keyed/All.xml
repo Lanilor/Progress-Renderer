@@ -41,5 +41,7 @@
 	<LPR_SettingsPixelPerCellDescription>Define with how many pixels each ingame map cell should be displayed on the rendered image.</LPR_SettingsPixelPerCellDescription>
 	<LPR_SettingsExportPathLabel>Export path</LPR_SettingsExportPathLabel>
 	<LPR_SettingsExportPathDescription>The path where rendered images will be saved. Note that this must be a valid path to an existing and accessible directory on your computer. You can copy+paste a directory from your file explorer here for simple editing.</LPR_SettingsExportPathDescription>
+	<LPR_SettingsCreateSubdirsLabel>Create subdirectories for each world</LPR_SettingsCreateSubdirsLabel>
+	<LPR_SettingsCreateSubdirsDescription>Enable this if you want rendered images to be stored in subdirectories for each game/world by the world seed.</LPR_SettingsCreateSubdirsDescription>
 
 </LanguageData>

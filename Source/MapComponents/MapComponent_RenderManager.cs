@@ -272,15 +272,22 @@ namespace ProgressRenderer
             int day = GenDate.DayOfQuadrum(tick, longitude) + 1;
             int hour = GenDate.HourInteger(tick, longitude);
             string imageName = "rimworld-" + Find.World.info.seedString + "-" + map.Tile + "-" + year + "-" + quadrum + "-" + ((day < 10) ? "0" : "") + day + "-" + ((hour < 10) ? "0" : "") + hour;
+            // Create path and subdirectory
+            string path = PRModSettings.exportPath;
+            if (PRModSettings.createSubdirs)
+            {
+                path = Path.Combine(path, Find.World.info.seedString);
+                Directory.CreateDirectory(path);
+            }
             // Get correct file and location
             string fileExt = PRModSettings.imageFormat.ToLower();
-            string filePath = Path.Combine(PRModSettings.exportPath, imageName + "." + fileExt);
+            string filePath = Path.Combine(path, imageName + "." + fileExt);
             if (!File.Exists(filePath))
             {
                 return filePath;
             }
             int i = 1;
-            filePath = Path.Combine(PRModSettings.exportPath, imageName);
+            filePath = Path.Combine(path, imageName);
             string newPath;
             do
             {

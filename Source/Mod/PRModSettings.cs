@@ -19,6 +19,7 @@ namespace ProgressRenderer
         private static int DefaultTimeOfDay = 8;
         private static string DefaultImageFormat = "JPG";
         private static int DefaultPixelPerCell = 32;
+        private static bool DefaultCreateSubdirs = false;
 
         public static bool enabled = DefaultEnabled;
         public static bool showMessageBox = DefaultShowMessageBox;
@@ -29,6 +30,7 @@ namespace ProgressRenderer
         public static string imageFormat = DefaultImageFormat;
         public static int pixelPerCell = DefaultPixelPerCell;
         public static string exportPath;
+        public static bool createSubdirs = DefaultCreateSubdirs;
 
         public PRModSettings() : base()
         {
@@ -82,7 +84,9 @@ namespace ProgressRenderer
             ls.SliderLabeled("LPR_SettingsPixelPerCellLabel".Translate(), ref pixelPerCell, 1, 64, "##0 ppc", "LPR_SettingsPixelPerCellDescription".Translate());
             ls.Gap();
             ls.TextFieldLabeled("LPR_SettingsExportPathLabel".Translate(), ref exportPath, "LPR_SettingsExportPathDescription".Translate());
-
+            ls.Gap();
+            ls.CheckboxLabeled("LPR_SettingsCreateSubdirsLabel".Translate(), ref createSubdirs, "LPR_SettingsCreateSubdirsDescription".Translate());
+            
             ls.End();
         }
 
@@ -98,6 +102,7 @@ namespace ProgressRenderer
             Scribe_Values.Look(ref imageFormat, "imageFormat", DefaultImageFormat);
             Scribe_Values.Look(ref pixelPerCell, "pixelPerCell", DefaultPixelPerCell);
             Scribe_Values.Look(ref exportPath, "exportPath", DesktopPath);
+            Scribe_Values.Look(ref createSubdirs, "createSubdirs", DefaultCreateSubdirs);
         }
 
         private static string DesktopPath
