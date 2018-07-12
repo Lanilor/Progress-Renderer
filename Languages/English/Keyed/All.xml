@@ -2,18 +2,40 @@
 <LanguageData>
 
   <!-- General -->
-	<LPR_Rendering>Rendering map image</LPR_Rendering>
+	<EveryHours>Every {0} hours</EveryHours>
+	<EveryHour>Every hour</EveryHour>
+
+  <!-- Messages -->
+	<LPR_MessageCornerMarkerAmount>There now are {0} corner markers on this map.</LPR_MessageCornerMarkerAmount>
+	<LPR_MessageCornerMarkerTooLess>Rendering needs 2 markers to limit the rendered area. Now the full map will be rendered.</LPR_MessageCornerMarkerTooLess>
+	<LPR_MessageCornerMarkerTooMany>Rendering will create and use a virtual rect around all markers. You may want to remove unnecessary ones.</LPR_MessageCornerMarkerTooMany>
+	<LPR_MessageCornerMarkerCorrect>Rendering will limit to the enclosed area.</LPR_MessageCornerMarkerCorrect>
+	<LPR_MessageCornerMarkersRect>Enclosing rect size is {0}x{1} cells.</LPR_MessageCornerMarkersRect>
+	<LPR_MessageCornerMarkesRectHeightTooLow>Height is too low. This will result in incorrect renderings. More than 20 cells height are recommended.</LPR_MessageCornerMarkesRectHeightTooLow>
+
+  <!-- Designation -->
+	<DesignatorCornerMarker>Rendering corner marker</DesignatorCornerMarker>
+	<DesignatorCornerMarkerDesc>Place corner markers for map rendering. Placing 2 will limit the rendering to only render the enclosed area.</DesignatorCornerMarkerDesc>
+	<DesignatorConerMarkerRemove>Remove corner marker</DesignatorConerMarkerRemove>
+	<DesignatorCornerMarkerRemoveDesc>Remove corner markers for map rendering. Removing all will let the rendering render the full map.</DesignatorCornerMarkerRemoveDesc>
+
+  <!-- Misc -->
+	<LPR_Rendering>Rendering map image...</LPR_Rendering>
 
   <!-- Settings -->
 	<LPR_SettingsCategory>Progress Renderer</LPR_SettingsCategory>
 	<LPR_SettingsEnabledLabel>Enabled</LPR_SettingsEnabledLabel>
 	<LPR_SettingsEnabledDescription>When enabled, this mod takes automatic screenshots of current maps while playing with the settings below. You can temporary disable this here so you don't have to remove the mod each time.</LPR_SettingsEnabledDescription>
+	<LPR_SettingsShowMessageBoxLabel>Show message box</LPR_SettingsShowMessageBoxLabel>
+	<LPR_SettingsShowMessageBoxDescription>Show a message box on screen when the game is rendering the map. Deactivate this to only get a standard text message. (Useful when you just render a small area in a short interval and the message window interrupts playing.)</LPR_SettingsShowMessageBoxDescription>
+	<LPR_SettingsSaveMemoryLabel>Save memory (on the cost of CPU power)</LPR_SettingsSaveMemoryLabel>
+	<LPR_SettingsSaveMemoryDescription>Enable this if your computer has little to no free memory while playing, to reduce long-term memory usage on the cost of CPU power. (This is only minor optimization and won't make anything magically faster.)</LPR_SettingsSaveMemoryDescription>
 	<LPR_SettingsRenderWeatherLabel>Render weather</LPR_SettingsRenderWeatherLabel>
 	<LPR_SettingsRenderWeatherDescription>Enable this when the rendered screenshots should contain the current ingame weather.</LPR_SettingsRenderWeatherDescription>
 	<LPR_SettingsIntervalLabel>Render interval (every X days)</LPR_SettingsIntervalLabel>
-	<LPR_SettingsIntervalDescription>Choose the render interval, so how often a progress image should be taken. For example "1" makes a picture each day while "15" makes one each quadrum.</LPR_SettingsIntervalDescription>
-	<LPR_SettingsTimeOfDayLabel>Render time of the day</LPR_SettingsTimeOfDayLabel>
-	<LPR_SettingsTimeOfDayDescription>Choose at which time (in hours) of the selected days the rendering should happen.</LPR_SettingsTimeOfDayDescription>
+	<LPR_SettingsIntervalDescription>Choose the render interval, so how often a progress image should be taken. You can choose a frequency between once a quadrum and hourly.</LPR_SettingsIntervalDescription>
+	<LPR_SettingsTimeOfDayLabel>Render time of the day / Hour offset</LPR_SettingsTimeOfDayLabel>
+	<LPR_SettingsTimeOfDayDescription>Choose at which time (in hours) of the selected days the rendering should happen. If you chose an interval of multiple times per day above, this setting works as an offset.</LPR_SettingsTimeOfDayDescription>
 	<LPR_SettingsImageFormatLabel>Exported image format</LPR_SettingsImageFormatLabel>
 	<LPR_SettingsPixelPerCellLabel>Pixel per cell (for image resolution)</LPR_SettingsPixelPerCellLabel>
 	<LPR_SettingsPixelPerCellDescription>Define with how many pixels each ingame map cell should be displayed on the rendered image.</LPR_SettingsPixelPerCellDescription>

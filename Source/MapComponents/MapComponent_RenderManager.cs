@@ -18,7 +18,15 @@ namespace ProgressRenderer
     public class MapComponent_RenderManager : MapComponent
     {
 
-        private int lastRenderedDay = -1;
+        private const int RenderTextureSize = 4096;
+        private const int RenderTextureSizeSmall = 1024;
+
+        private bool ctrlDoRendering = false;
+        private bool ctrlCloseMessageBox = false;
+        private int lastRenderedHour = -999;
+
+        private SmallMessageBox messageBox;
+        private Texture2D imageTexture;
 
         public MapComponent_RenderManager(Map map) : base(map)
         {
@@ -39,6 +47,28 @@ namespace ProgressRenderer
 
         public override void MapComponentTick()
         {
+            if (ctrlDoRendering)
+            {
+                // Start rendering if it is enabled
+                if (PRModSettings.enabled)
+                {
+                    Find.CameraDriver.StartCoroutine(DoRendering());
+                }
+                ctrlDoRendering = false;
+                ctrlCloseMessageBox = true;
+                return;
+            }
+            if (ctrlCloseMessageBox)
+            {
+                if (messageBox != null)
+                {
+                    messageBox.Close();
+                    messageBox = null;
+                }
+                ctrlCloseMessageBox = false;
+                return;
+            }
+
             // TickRare
             if (Find.TickManager.TicksGame % 250 != 0)
             {
@@ -49,38 +79,36 @@ namespace ProgressRenderer
             {
                 return;
             }
-            // Check for correct day
-            int currDay = GenDate.DaysPassed;
-            if (currDay <= lastRenderedDay || currDay % PRModSettings.interval != 0)
-            {
-                return;
-            }
-            // Check for correct hour
+            // Check for correct time to render
             Vector2 longLat = Find.WorldGrid.LongLatOf(map.Tile);
-            int hour = GenDate.HourInteger(Find.TickManager.TicksAbs, longLat.x);
-            if (hour != PRModSettings.timeOfDay)
+            int currHour = MoreGenDate.HoursPassedInteger(Find.TickManager.TicksAbs, longLat.x);
+            if (currHour <= lastRenderedHour)
             {
                 return;
             }
-            // Update lastRenderedDay
-            lastRenderedDay = currDay;
-            // Start rendering if it is enabled
-            if (PRModSettings.enabled)
+            if (currHour % PRModSettings.interval != PRModSettings.timeOfDay % PRModSettings.interval)
             {
-                //LongEventHandler.QueueLongEvent(new Action(StartRendering), "LPR_Rendering", false, null);
-                Find.CameraDriver.StartCoroutine(DoRendering());
+                return;
+            }
+            // Prepare for rendering
+            lastRenderedHour = currHour;
+            ctrlDoRendering = true;
+            // Show message window
+            if (PRModSettings.showMessageBox)
+            {
+                messageBox = new SmallMessageBox("LPR_Rendering".Translate());
+                Find.WindowStack.Add(messageBox);
+            }
+            else
+            {
+                Messages.Message("LPR_Rendering".Translate(), MessageTypeDefOf.CautionInput, false);
             }
         }
 
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Values.Look<int>(ref lastRenderedDay, "lastRenderedDay", -1);
-        }
-
-        private void StartRendering()
-        {
-            // TODO
+            Scribe_Values.Look<int>(ref lastRenderedHour, "lastRenderedHour", -999);
         }
 
         private IEnumerator DoRendering()
@@ -101,22 +129,57 @@ namespace ProgressRenderer
                 CameraJumper.TryHideWorld();
             }
 
+            // Calculate rendered area
+            int startX = 0;
+            int startZ = 0;
+            int endX = map.Size.x;
+            int endZ = map.Size.z;
+            List<Designation> cornerMarkers = map.designationManager.allDesignations.FindAll(des => des.def == DesignationDefOf.CornerMarker);
+            if (cornerMarkers.Count > 1)
+            {
+                startX = endX;
+                startZ = endZ;
+                endX = 0;
+                endZ = 0;
+                foreach (Designation des in cornerMarkers)
+                {
+                    IntVec3 cell = des.target.Cell;
+                    if (cell.x < startX) { startX = cell.x; }
+                    if (cell.z < startZ) { startZ = cell.z; }
+                    if (cell.x > endX) { endX = cell.x; }
+                    if (cell.z > endZ) { endZ = cell.z; }
+                }
+                endX += 1;
+                endZ += 1;
+            }
+            int distX = endX - startX;
+            int distZ = endZ - startZ;
+            
             // Calculate basic values that are used for rendering
-            int imageWidth = map.Size.x * PRModSettings.pixelPerCell;
-            int imageHeight = map.Size.z * PRModSettings.pixelPerCell;
+            int imageWidth = distX * PRModSettings.pixelPerCell;
+            int imageHeight = distZ * PRModSettings.pixelPerCell;
 
-            int renderCountX = (int)Math.Ceiling((float)imageWidth / 4096);
-            int renderCountZ = (int)Math.Ceiling((float)imageHeight / 4096);
+            int renderTextureSize = PRModSettings.saveMemory ? RenderTextureSizeSmall : RenderTextureSize;
+            int renderCountX = (int)Math.Ceiling((float)imageWidth / renderTextureSize);
+            int renderCountZ = (int)Math.Ceiling((float)imageHeight / renderTextureSize);
             int renderWidth = (int)Math.Ceiling((float)imageWidth / renderCountX);
             int renderHeight = (int)Math.Ceiling((float)imageHeight / renderCountZ);
 
-            float cameraPosX = (float)map.Size.x / 2 / renderCountX;
-            float cameraPosZ = (float)map.Size.z / 2 / renderCountZ;
+            float cameraPosX = (float)distX / 2 / renderCountX;
+            float cameraPosZ = (float)distZ / 2 / renderCountZ;
             float orthographicSize = Math.Min(cameraPosX, cameraPosZ);
-            Vector3 cameraPos = new Vector3(cameraPosX, 15f + (orthographicSize - 11f) / 49f * 50f, cameraPosZ);
+            orthographicSize = cameraPosZ;
+            Vector3 cameraBasePos = new Vector3(cameraPosX, 15f + (orthographicSize - 11f) / 49f * 50f, cameraPosZ);
 
             RenderTexture renderTexture = new RenderTexture(renderWidth, renderHeight, 24);
-            Texture2D imageTexture = new Texture2D(imageWidth, imageHeight, TextureFormat.RGB24, false);
+            if (imageTexture == null)
+            {
+                imageTexture = new Texture2D(0, 0, TextureFormat.RGB24, false);
+            }
+            if (imageTexture.width != imageWidth || imageTexture.height != imageHeight)
+            {
+                imageTexture.Resize(imageWidth, imageHeight);
+            }
 
             Camera camera = Find.Camera;
             CameraDriver camDriver = camera.GetComponent<CameraDriver>();
@@ -128,12 +191,12 @@ namespace ProgressRenderer
             float rememberedFarClipPlane = camera.farClipPlane;
 
             // Overwrite current view rect in the camera driver
-            Traverse.Create(camDriver).Field("lastViewRect").SetValue(new CellRect(0, 0, map.Size.x, map.Size.z));
+            Traverse.Create(camDriver).Field("lastViewRect").SetValue(new CellRect(startX, startZ, endX, endZ));
             yield return new WaitForEndOfFrame();
 
             // Set camera values needed for rendering
             camera.orthographicSize = orthographicSize;
-            camera.farClipPlane = cameraPos.y + 6.5f;
+            camera.farClipPlane = cameraBasePos.y + 6.5f;
             
             // Create a temporary camera for rendering
             /*Camera tmpCam = Camera.Instantiate(camera);
@@ -154,7 +217,7 @@ namespace ProgressRenderer
             {
                 for (int j = 0; j < renderCountX; j++)
                 {
-                    camera.transform.position = new Vector3(cameraPos.x * (2 * j + 1), cameraPos.y, cameraPos.z * (2 * i + 1));
+                    camera.transform.position = new Vector3(startX + cameraBasePos.x * (2 * j + 1), cameraBasePos.y, startZ + cameraBasePos.z * (2 * i + 1));
                     camera.Render();
                     imageTexture.ReadPixels(new Rect(0, 0, renderWidth, renderHeight), renderWidth * j, renderHeight * i, false);
                 }
@@ -171,7 +234,11 @@ namespace ProgressRenderer
             {
                 encodedImage = imageTexture.EncodeToJPG();
             }
-            File.WriteAllBytes(CreateCurrentFilePath(), encodedImage);
+            File.WriteAllBytes(CreateCurrentFilePath(map), encodedImage);
+            if (PRModSettings.saveMemory)
+            {
+                imageTexture.Resize(0, 0);
+            }
 
             // Restore camera and viewport
             RenderTexture.active = null;
@@ -195,9 +262,17 @@ namespace ProgressRenderer
             yield break;
         }
 
-        private string CreateCurrentFilePath()
+        private string CreateCurrentFilePath(Map map)
         {
-            string imageName = "rimworld-" + Find.World.info.seedString + "-" + map.Tile + "-" + GenDate.DaysPassed;
+            // Build image name
+            int tick = Find.TickManager.TicksAbs;
+            float longitude = Find.WorldGrid.LongLatOf(map.Tile).x;
+            int year = GenDate.Year(tick, longitude);
+            int quadrum = MoreGenDate.QuadrumInteger(tick, longitude);
+            int day = GenDate.DayOfQuadrum(tick, longitude) + 1;
+            int hour = GenDate.HourInteger(tick, longitude);
+            string imageName = "rimworld-" + Find.World.info.seedString + "-" + map.Tile + "-" + year + "-" + quadrum + "-" + ((day < 10) ? "0" : "") + day + "-" + ((hour < 10) ? "0" : "") + hour;
+            // Get correct file and location
             string fileExt = PRModSettings.imageFormat.ToLower();
             string filePath = Path.Combine(PRModSettings.exportPath, imageName + "." + fileExt);
             if (!File.Exists(filePath))

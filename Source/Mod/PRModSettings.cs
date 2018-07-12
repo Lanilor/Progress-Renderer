@@ -12,13 +12,17 @@ namespace ProgressRenderer
         public static string[] SupportedImageFormats = { "JPG", "PNG" };
 
         private static bool DefaultEnabled = true;
-        private static bool DefaultRenderWeather = false;
-        private static int DefaultInterval = 1;
+        private static bool DefaultShowMessageBox = true;
+        private static bool DefaultSaveMemory = false;
+        private static bool DefaultRenderWeather = true;
+        private static int DefaultInterval = 24;
         private static int DefaultTimeOfDay = 8;
         private static string DefaultImageFormat = "JPG";
-        private static int DefaultPixelPerCell = 20;
+        private static int DefaultPixelPerCell = 32;
 
         public static bool enabled = DefaultEnabled;
+        public static bool showMessageBox = DefaultShowMessageBox;
+        public static bool saveMemory = DefaultSaveMemory;
         public static bool renderWeather = DefaultRenderWeather;
         public static int interval = DefaultInterval;
         public static int timeOfDay = DefaultTimeOfDay;
@@ -41,16 +45,23 @@ namespace ProgressRenderer
             ls.Gap();
 
             ls.CheckboxLabeled("LPR_SettingsEnabledLabel".Translate(), ref enabled, "LPR_SettingsEnabledDescription".Translate());
+            ls.Gap();
+            ls.CheckboxLabeled("LPR_SettingsShowMessageBoxLabel".Translate(), ref showMessageBox, "LPR_SettingsShowMessageBoxDescription".Translate());
+            ls.Gap();
+            ls.CheckboxLabeled("LPR_SettingsSaveMemoryLabel".Translate(), ref saveMemory, "LPR_SettingsSaveMemoryDescription".Translate());
             ls.GapGapLine();
 
             ls.CheckboxLabeled("LPR_SettingsRenderWeatherLabel".Translate(), ref renderWeather, "LPR_SettingsRenderWeatherDescription".Translate());
             ls.GapGapLine();
 
-            ls.SliderLabeled("LPR_SettingsIntervalLabel".Translate(), ref interval, 1, 60, "LPR_SettingsIntervalDescription".Translate());
+            ls.FixedFrequencySliderLabeled("LPR_SettingsIntervalLabel".Translate(), ref interval, "LPR_SettingsIntervalDescription".Translate());
             ls.Gap();
-            ls.SliderLabeled("LPR_SettingsTimeOfDayLabel".Translate(), ref timeOfDay, 0, 23, "LPR_SettingsTimeOfDayDescription".Translate());
+            ls.SliderLabeled("LPR_SettingsTimeOfDayLabel".Translate(), ref timeOfDay, 0, 23, "00 h", "LPR_SettingsTimeOfDayDescription".Translate());
             ls.GapGapLine();
 
+            // Backup original values
+            TextAnchor backupAnchor = Text.Anchor;
+            Text.Anchor = TextAnchor.MiddleLeft;
             if (ls.ButtonTextLabeled("LPR_SettingsImageFormatLabel".Translate(), imageFormat))
             {
                 List<FloatMenuOption> menuEntries = new List<FloatMenuOption>();
@@ -64,8 +75,11 @@ namespace ProgressRenderer
                 }));
                 Find.WindowStack.Add(new FloatMenu(menuEntries));
             }
+            // Restore original values
+            Text.Anchor = backupAnchor;
+
             ls.Gap();
-            ls.SliderLabeled("LPR_SettingsPixelPerCellLabel".Translate(), ref pixelPerCell, 1, 64, "LPR_SettingsPixelPerCellDescription".Translate());
+            ls.SliderLabeled("LPR_SettingsPixelPerCellLabel".Translate(), ref pixelPerCell, 1, 64, "##0 ppc", "LPR_SettingsPixelPerCellDescription".Translate());
             ls.Gap();
             ls.TextFieldLabeled("LPR_SettingsExportPathLabel".Translate(), ref exportPath, "LPR_SettingsExportPathDescription".Translate());
 
@@ -76,6 +90,8 @@ namespace ProgressRenderer
         {
             base.ExposeData();
             Scribe_Values.Look(ref enabled, "enabled", DefaultEnabled);
+            Scribe_Values.Look(ref showMessageBox, "showMessageBox", DefaultShowMessageBox);
+            Scribe_Values.Look(ref saveMemory, "saveMemory", DefaultSaveMemory);
             Scribe_Values.Look(ref renderWeather, "renderWeather", DefaultRenderWeather);
             Scribe_Values.Look(ref interval, "interval", DefaultInterval);
             Scribe_Values.Look(ref timeOfDay, "timeOfDay", DefaultTimeOfDay);
