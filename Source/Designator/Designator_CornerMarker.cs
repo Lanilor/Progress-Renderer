@@ -1,6 +1,5 @@
-﻿using RimWorld;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using RimWorld;
 using Verse;
 
 namespace ProgressRenderer
@@ -71,9 +70,9 @@ namespace ProgressRenderer
 
         private void DesignateSingleCellFeedback()
         {
-            List<Designation> markers = Map.designationManager.allDesignations.FindAll(des => des.def == DesignationDefOf.CornerMarker);
+            List<Designation> cornerMarkers = Map.designationManager.allDesignations.FindAll(des => des.def == DesignationDefOf.CornerMarker);
             // Message for the amount of markers on the map
-            int markerCount = markers.Count;
+            int markerCount = cornerMarkers.Count;
             string message = "LPR_MessageCornerMarkerAmount".Translate(new object[] { markerCount }) + " ";
             if (markerCount < 2)
             {
@@ -95,7 +94,7 @@ namespace ProgressRenderer
                 int startZ = Map.Size.z;
                 int endX = 0;
                 int endZ = 0;
-                foreach (Designation des in markers)
+                foreach (Designation des in cornerMarkers)
                 {
                     IntVec3 cell = des.target.Cell;
                     if (cell.x < startX) { startX = cell.x; }

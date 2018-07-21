@@ -25,20 +25,35 @@
   <!-- Settings -->
 	<LPR_SettingsCategory>Progress Renderer</LPR_SettingsCategory>
 	<LPR_SettingsEnabledLabel>Enabled</LPR_SettingsEnabledLabel>
-	<LPR_SettingsEnabledDescription>When enabled, this mod takes automatic screenshots of current maps while playing with the settings below. You can temporary disable this here so you don't have to remove the mod each time.</LPR_SettingsEnabledDescription>
+	<LPR_SettingsEnabledDescription>When enabled, this mod takes automatic renderings of current maps while playing and uses the settings below. You can temporary disable this here so you don't have to remove the mod each time.</LPR_SettingsEnabledDescription>
 	<LPR_SettingsShowMessageBoxLabel>Show message box</LPR_SettingsShowMessageBoxLabel>
-	<LPR_SettingsShowMessageBoxDescription>Show a message box on screen when the game is rendering the map. Deactivate this to only get a standard text message. (Useful when you just render a small area in a short interval and the message window interrupts playing.)</LPR_SettingsShowMessageBoxDescription>
-	<LPR_SettingsSaveMemoryLabel>Save memory (on the cost of CPU power)</LPR_SettingsSaveMemoryLabel>
-	<LPR_SettingsSaveMemoryDescription>Enable this if your computer has little to no free memory while playing, to reduce long-term memory usage on the cost of CPU power. (This is only minor optimization and won't make anything magically faster.)</LPR_SettingsSaveMemoryDescription>
-	<LPR_SettingsRenderWeatherLabel>Render weather</LPR_SettingsRenderWeatherLabel>
-	<LPR_SettingsRenderWeatherDescription>Enable this when the rendered screenshots should contain the current ingame weather.</LPR_SettingsRenderWeatherDescription>
+	<LPR_SettingsShowMessageBoxDescription>Show a message box on screen when the game is rendering the map. Deactivate this to only get a standard text message. (Useful when you just render a small area in a short interval and the message window interrupts playing.) (The message box is always deactivated when a multithreaded encoding method is selected.)</LPR_SettingsShowMessageBoxDescription>
+	<LPR_SettingsRenderSettingsLabel>Render settings</LPR_SettingsRenderSettingsLabel>
+	<LPR_SettingsRenderSettingsDescription>Configure some optional graphical elements that should be included in the rendered images. The map will always be rendered while some temporary parts like your current selection, targeters or ui text and the mounse cursor are never included.</LPR_SettingsRenderSettingsDescription>
+	<LPR_SettingsRenderDesignationsLabel>Designations</LPR_SettingsRenderDesignationsLabel>
+	<LPR_SettingsRenderDesignationsDescription>Enable this when the rendered images should show designators. For example the mining, smoothing and plant cut designators.</LPR_SettingsRenderDesignationsDescription>
+	<LPR_SettingsRenderThingIconsLabel>Thing icons</LPR_SettingsRenderThingIconsLabel>
+	<LPR_SettingsRenderThingIconsDescription>Enable this when the rendered images should show overlay icons on things and buildings. For example "forbidden", "no fuel", "no power" and such icons.</LPR_SettingsRenderThingIconsDescription>
+	<LPR_SettingsRenderGameConditionsLabel>Game conditions</LPR_SettingsRenderGameConditionsLabel>
+	<LPR_SettingsRenderGameConditionsDescription>Enable this when the rendered images should contain game condition effects (like weather and lighting from toxic fallout).</LPR_SettingsRenderGameConditionsDescription>
+	<LPR_SettingsRenderWeatherLabel>Weather</LPR_SettingsRenderWeatherLabel>
+	<LPR_SettingsRenderWeatherDescription>Enable this when the rendered images should contain the current ingame weather.</LPR_SettingsRenderWeatherDescription>
+	<LPR_SettingsSmoothRenderAreaStepsLabel>Smooth render area on change (set smoothing steps)</LPR_SettingsSmoothRenderAreaStepsLabel>
+	<LPR_SettingsSmoothRenderAreaStepsDescription>You can increase this if you want a smoother transition of your rendered area when you change the area with corner markers. Rendering will transition smoothly to the new area in the next X renderings. (Note that it may take a while to geet to the new area if you choose a high step value and a low render interval.)</LPR_SettingsSmoothRenderAreaStepsDescription>
 	<LPR_SettingsIntervalLabel>Render interval (every X days)</LPR_SettingsIntervalLabel>
 	<LPR_SettingsIntervalDescription>Choose the render interval, so how often a progress image should be taken. You can choose a frequency between once a quadrum and hourly.</LPR_SettingsIntervalDescription>
 	<LPR_SettingsTimeOfDayLabel>Render time of the day / Hour offset</LPR_SettingsTimeOfDayLabel>
 	<LPR_SettingsTimeOfDayDescription>Choose at which time (in hours) of the selected days the rendering should happen. If you chose an interval of multiple times per day above, this setting works as an offset.</LPR_SettingsTimeOfDayDescription>
-	<LPR_SettingsImageFormatLabel>Exported image format</LPR_SettingsImageFormatLabel>
+	<LPR_SettingsEncodingLabel>Exported image encoding</LPR_SettingsEncodingLabel>
+	<!--<LPR_SettingsEncodingDescription>Choose the encoding method of the rendered image. This defines the resulting image format and affects rendering speed as well as image quality and filesize.</LPR_SettingsEncodingDescription>-->
+	<LPR_ImgEncoding_png_unity>PNG (Unity)</LPR_ImgEncoding_png_unity>
+	<LPR_ImgEncoding_jpg_unity>JPG (Unity)</LPR_ImgEncoding_jpg_unity>
+	<LPR_ImgEncoding_jpg_fluxthreaded>JPG (Flux Multithreaded) (EXPERIMENTAL)</LPR_ImgEncoding_jpg_fluxthreaded>
 	<LPR_SettingsPixelPerCellLabel>Pixel per cell (for image resolution)</LPR_SettingsPixelPerCellLabel>
 	<LPR_SettingsPixelPerCellDescription>Define with how many pixels each ingame map cell should be displayed on the rendered image.</LPR_SettingsPixelPerCellDescription>
+	<LPR_SettingsOutputImageFixedHeightLabel>Scale rendered image to fixed height (in px)</LPR_SettingsOutputImageFixedHeightLabel>
+	<LPR_SettingsOutputImageFixedHeightAdditionalInfo>(set to 0 to deactivate)</LPR_SettingsOutputImageFixedHeightAdditionalInfo>
+	<LPR_SettingsOutputImageFixedHeightDescription>Set this if you want the rendered output image to have a fixed height. The width will be calculated to prevent the aspect ratio. (Useful when you change the rendered area size mid-game and and plan to animate the image sequence later, so you can work with one fixed image size.)</LPR_SettingsOutputImageFixedHeightDescription>
 	<LPR_SettingsExportPathLabel>Export path</LPR_SettingsExportPathLabel>
 	<LPR_SettingsExportPathDescription>The path where rendered images will be saved. Note that this must be a valid path to an existing and accessible directory on your computer. You can copy+paste a directory from your file explorer here for simple editing.</LPR_SettingsExportPathDescription>
 	<LPR_SettingsCreateSubdirsLabel>Create subdirectories for each world</LPR_SettingsCreateSubdirsLabel>
