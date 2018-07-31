@@ -56,6 +56,11 @@
 	<LPR_SettingsOutputImageFixedHeightDescription>Set this if you want the rendered output image to have a fixed height. The width will be calculated to prevent the aspect ratio. (Useful when you change the rendered area size mid-game and and plan to animate the image sequence later, so you can work with one fixed image size.)</LPR_SettingsOutputImageFixedHeightDescription>
 	<LPR_SettingsExportPathLabel>Export path</LPR_SettingsExportPathLabel>
 	<LPR_SettingsExportPathDescription>The path where rendered images will be saved. Note that this must be a valid path to an existing and accessible directory on your computer. You can copy+paste a directory from your file explorer here for simple editing.</LPR_SettingsExportPathDescription>
+	<LPR_SettingsFileNamePatternLabel>Exported image filename pattern</LPR_SettingsFileNamePatternLabel>
+	<!--<LPR_SettingsFileNamePatternDescription></LPR_SettingsFileNamePatternDescription>-->
+	<LPR_FileNamePattern_DateTime>Ingame date and time</LPR_FileNamePattern_DateTime>
+	<LPR_FileNamePattern_Numbered>Numbered consecutively (for each map)</LPR_FileNamePattern_Numbered>
+	<LPR_FileNamePattern_BothTmpCopy>Both (numbered copy in tmp subdir)</LPR_FileNamePattern_BothTmpCopy>
 	<LPR_SettingsCreateSubdirsLabel>Create subdirectories for each world</LPR_SettingsCreateSubdirsLabel>
 	<LPR_SettingsCreateSubdirsDescription>Enable this if you want rendered images to be stored in subdirectories for each game/world by the world seed.</LPR_SettingsCreateSubdirsDescription>
 

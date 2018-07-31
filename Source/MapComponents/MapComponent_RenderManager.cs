@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using FluxJpeg.Core;
 using FluxJpeg.Core.Encoder;
@@ -20,6 +21,7 @@ namespace ProgressRenderer
         private const int RenderTextureSize = 4096;
 
         private int lastRenderedHour = -999;
+        private int lastRenderedCounter = 0;
         private float rsOldStartX = -1f;
         private float rsOldStartZ = -1f;
         private float rsOldEndX = -1f;
@@ -111,6 +113,7 @@ namespace ProgressRenderer
             }
             // Start rendering
             lastRenderedHour = currHour;
+            lastRenderedCounter++;
             if (PRModSettings.enabled)
             {
                 Find.CameraDriver.StartCoroutine(DoRendering());
@@ -121,6 +124,7 @@ namespace ProgressRenderer
         {
             base.ExposeData();
             Scribe_Values.Look<int>(ref lastRenderedHour, "lastRenderedHour", -999);
+            Scribe_Values.Look<int>(ref lastRenderedCounter, "lastRenderedCounter", 0);
             Scribe_Values.Look<float>(ref rsOldStartX, "rsOldStartX", -1f);
             Scribe_Values.Look<float>(ref rsOldStartZ, "rsOldStartZ", -1f);
             Scribe_Values.Look<float>(ref rsOldEndX, "rsOldEndX", -1f);
@@ -253,8 +257,13 @@ namespace ProgressRenderer
             float rememberedFarClipPlane = camera.farClipPlane;
 
             // Overwrite current view rect in the camera driver
+            CellRect camViewRect = camDriver.CurrentViewRect;
+            int camRectMinX = Math.Min((int)startX, camViewRect.minX);
+            int camRectMinZ = Math.Min((int)startZ, camViewRect.minZ);
+            int camRectMaxX = Math.Max((int)Math.Ceiling(endX), camViewRect.maxX);
+            int camRectMaxZ = Math.Max((int)Math.Ceiling(endZ), camViewRect.maxZ);
             Traverse camDriverTraverse = Traverse.Create(camDriver);
-            camDriverTraverse.Field("lastViewRect").SetValue(new CellRect((int)startX, (int)startZ, (int)Math.Ceiling(endX), (int)Math.Ceiling(endZ)));
+            camDriverTraverse.Field("lastViewRect").SetValue(CellRect.FromLimits(camRectMinX, camRectMinZ, camRectMaxX, camRectMaxZ));
             camDriverTraverse.Field("lastViewRectGetFrame").SetValue(Time.frameCount);
             yield return new WaitForEndOfFrame();
 
@@ -373,14 +382,23 @@ namespace ProgressRenderer
         private void EncodeUnityPng()
         {
             byte[] encodedImage = imageTexture.EncodeToPNG();
-            File.WriteAllBytes(CreateCurrentFilePath(map), encodedImage);
-            DoEncodingPost();
+            SaveUnityEncoding(encodedImage);
         }
 
         private void EncodeUnityJpg()
         {
             byte[] encodedImage = imageTexture.EncodeToJPG();
-            File.WriteAllBytes(CreateCurrentFilePath(map), encodedImage);
+            SaveUnityEncoding(encodedImage);
+        }
+
+        private void SaveUnityEncoding(byte[] encodedImage)
+        {
+            string filePath = CreateCurrentFilePath();
+            File.WriteAllBytes(filePath, encodedImage);
+            if (PRModSettings.fileNamePattern == FileNamePattern.BothTmpCopy)
+            {
+                File.Copy(filePath, CreateFilePath(FileNamePattern.Numbered, true));
+            }
             DoEncodingPost();
         }
 
@@ -409,7 +427,8 @@ namespace ProgressRenderer
             Log.Message("4");
             FluxJpeg.Core.Image image = new FluxJpeg.Core.Image(model, rawImage);
             Log.Message("5 - post image");
-            FileStream fileStream = new FileStream(CreateCurrentFilePath(map), FileMode.Create);
+            string filePath = CreateCurrentFilePath();
+            FileStream fileStream = new FileStream(filePath, FileMode.Create);
             Log.Message("6 . post fs");
             JpegEncoder encoder = new JpegEncoder(image, 75, fileStream);
             Log.Message("7 - post encode");
@@ -419,23 +438,41 @@ namespace ProgressRenderer
             image = null;
             rawImage = null;
             Log.Message("end - 9");
+            // Create tmp copy to file if needed
+            if (PRModSettings.fileNamePattern == FileNamePattern.BothTmpCopy)
+            {
+                File.Copy(filePath, CreateFilePath(FileNamePattern.Numbered, true));
+            }
         }
 
-        private string CreateCurrentFilePath(Map map)
+        private string CreateCurrentFilePath()
+        {
+            return CreateFilePath(PRModSettings.fileNamePattern);
+        }
+
+        private string CreateFilePath(FileNamePattern fileNamePattern, bool addTmpSubdir = false)
         {
             // Build image name
-            int tick = Find.TickManager.TicksAbs;
-            float longitude = Find.WorldGrid.LongLatOf(map.Tile).x;
-            int year = GenDate.Year(tick, longitude);
-            int quadrum = MoreGenDate.QuadrumInteger(tick, longitude);
-            int day = GenDate.DayOfQuadrum(tick, longitude) + 1;
-            int hour = GenDate.HourInteger(tick, longitude);
-            string imageName = "rimworld-" + Find.World.info.seedString + "-" + map.Tile + "-" + year + "-" + quadrum + "-" + ((day < 10) ? "0" : "") + day + "-" + ((hour < 10) ? "0" : "") + hour;
+            string imageName;
+            if (fileNamePattern == FileNamePattern.Numbered)
+            {
+                imageName = CreateImageNameNumbered();
+            }
+            else
+            {
+                imageName = CreateImageNameDateTime();
+            }
             // Create path and subdirectory
             string path = PRModSettings.exportPath;
             if (PRModSettings.createSubdirs)
             {
                 path = Path.Combine(path, Find.World.info.seedString);
+                Directory.CreateDirectory(path);
+            }
+            // Create additional subdir for numbered symlinks
+            if (addTmpSubdir)
+            {
+                path = Path.Combine(path, "tmp");
                 Directory.CreateDirectory(path);
             }
             // Get correct file and location
@@ -450,11 +487,27 @@ namespace ProgressRenderer
             string newPath;
             do
             {
-                newPath = filePath + "-" + i + "." + fileExt;
+                newPath = filePath + "-alt" + i + "." + fileExt;
                 i++;
             }
             while (File.Exists(newPath));
             return newPath;
+        }
+
+        private string CreateImageNameDateTime()
+        {
+            int tick = Find.TickManager.TicksAbs;
+            float longitude = Find.WorldGrid.LongLatOf(map.Tile).x;
+            int year = GenDate.Year(tick, longitude);
+            int quadrum = MoreGenDate.QuadrumInteger(tick, longitude);
+            int day = GenDate.DayOfQuadrum(tick, longitude) + 1;
+            int hour = GenDate.HourInteger(tick, longitude);
+            return "rimworld-" + Find.World.info.seedString + "-" + map.Tile + "-" + year + "-" + quadrum + "-" + ((day < 10) ? "0" : "") + day + "-" + ((hour < 10) ? "0" : "") + hour;
+        }
+
+        private string CreateImageNameNumbered()
+        {
+            return "rimworld-" + Find.World.info.seedString + "-" + map.Tile + "-" + lastRenderedCounter.ToString("000000");
         }
 
     }

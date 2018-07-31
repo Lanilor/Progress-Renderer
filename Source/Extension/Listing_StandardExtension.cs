@@ -10,11 +10,11 @@ namespace ProgressRenderer
 
         private const float BaseLineHeight = 30f;
 
-        public static void GapGapLine(this Listing_Standard ls)
+        public static void GapGapLine(this Listing_Standard ls, float gapHeight = 12f)
         {
-            ls.Gap();
-            ls.GapLine();
-            ls.Gap();
+            ls.Gap(gapHeight);
+            ls.GapLine(gapHeight);
+            ls.Gap(gapHeight);
         }
 
         public static void CheckboxGroupLabeled(this Listing_Standard ls, string label, string tooltip, string cbLabel1, ref bool cbCheckOn1, string cbTooltip1, string cbLabel2, ref bool cbCheckOn2, string cbTooltip2)

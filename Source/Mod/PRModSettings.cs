@@ -9,6 +9,7 @@ namespace ProgressRenderer
     public class PRModSettings : ModSettings
     {
 
+        public const float GapHeight = 10f;
         public static string[] SupportedEncodings = { "png_unity", "jpg_unity", "jpg_fluxthreaded" };
         
         private static bool DefaultEnabled = true;
@@ -24,6 +25,7 @@ namespace ProgressRenderer
         private static int DefaultPixelPerCell = 32;
         private static int DefaultOutputImageFixedHeight = 0;
         private static bool DefaultCreateSubdirs = false;
+        private static FileNamePattern DefaultFileNamePattern = FileNamePattern.DateTime;
 
         public static bool enabled = DefaultEnabled;
         public static bool showMessageBox = DefaultShowMessageBox;
@@ -39,6 +41,7 @@ namespace ProgressRenderer
         public static int outputImageFixedHeight = DefaultOutputImageFixedHeight;
         public static string exportPath;
         public static bool createSubdirs = DefaultCreateSubdirs;
+        public static FileNamePattern fileNamePattern = DefaultFileNamePattern;
 
         private static string outputImageFixedHeightBuffer;
 
@@ -54,23 +57,23 @@ namespace ProgressRenderer
         {
             Listing_Standard ls = new Listing_Standard();
             ls.Begin(rect);
-            ls.Gap();
+            ls.Gap(GapHeight);
 
             ls.CheckboxLabeled("LPR_SettingsEnabledLabel".Translate(), ref enabled, "LPR_SettingsEnabledDescription".Translate());
-            ls.Gap();
+            ls.Gap(GapHeight);
             ls.CheckboxLabeled("LPR_SettingsShowMessageBoxLabel".Translate(), ref showMessageBox, "LPR_SettingsShowMessageBoxDescription".Translate());
-            ls.GapGapLine();
+            ls.GapGapLine(GapHeight);
 
             ls.CheckboxGroupLabeled("LPR_SettingsRenderSettingsLabel".Translate(), "LPR_SettingsRenderSettingsDescription".Translate(), "LPR_SettingsRenderDesignationsLabel".Translate(), ref renderDesignations, "LPR_SettingsRenderDesignationsDescription".Translate(), "LPR_SettingsRenderThingIconsLabel".Translate(), ref renderThingIcons, "LPR_SettingsRenderThingIconsDescription".Translate());
             ls.CheckboxGroupLabeled(null, "LPR_SettingsRenderSettingsDescription".Translate(), "LPR_SettingsRenderGameConditionsLabel".Translate(), ref renderGameConditions, "LPR_SettingsRenderGameConditionsDescription".Translate(), "LPR_SettingsRenderWeatherLabel".Translate(), ref renderWeather, "LPR_SettingsRenderWeatherDescription".Translate());
-            ls.Gap();
+            ls.Gap(GapHeight);
             ls.SliderLabeled("LPR_SettingsSmoothRenderAreaStepsLabel".Translate(), ref smoothRenderAreaSteps, 0, 30, null, "LPR_SettingsSmoothRenderAreaStepsDescription".Translate());
-            ls.GapGapLine();
+            ls.GapGapLine(GapHeight);
 
             ls.FixedFrequencySliderLabeled("LPR_SettingsIntervalLabel".Translate(), ref interval, "LPR_SettingsIntervalDescription".Translate());
-            ls.Gap();
+            ls.Gap(GapHeight);
             ls.SliderLabeled("LPR_SettingsTimeOfDayLabel".Translate(), ref timeOfDay, 0, 23, "00 h", "LPR_SettingsTimeOfDayDescription".Translate());
-            ls.GapGapLine();
+            ls.GapGapLine(GapHeight);
 
             // Backup original values
             TextAnchor backupAnchor = Text.Anchor;
@@ -95,15 +98,39 @@ namespace ProgressRenderer
             // Restore original values
             Text.Anchor = backupAnchor;
 
-            ls.Gap();
+            ls.Gap(GapHeight);
             ls.SliderLabeled("LPR_SettingsPixelPerCellLabel".Translate(), ref pixelPerCell, 1, 64, "##0 ppc", "LPR_SettingsPixelPerCellDescription".Translate());
-            ls.Gap();
+            ls.Gap(GapHeight);
             ls.IntegerFieldLabeled("LPR_SettingsOutputImageFixedHeightLabel".Translate(), ref outputImageFixedHeight, ref outputImageFixedHeightBuffer, "LPR_SettingsOutputImageFixedHeightAdditionalInfo".Translate(), "LPR_SettingsOutputImageFixedHeightDescription".Translate());
-            ls.Gap();
+            ls.Gap(GapHeight);
             ls.TextFieldLabeled("LPR_SettingsExportPathLabel".Translate(), ref exportPath, "LPR_SettingsExportPathDescription".Translate());
-            ls.Gap();
+            ls.Gap(GapHeight);
             ls.CheckboxLabeled("LPR_SettingsCreateSubdirsLabel".Translate(), ref createSubdirs, "LPR_SettingsCreateSubdirsDescription".Translate());
+            ls.Gap(GapHeight);
             
+            // Backup original values
+            backupAnchor = Text.Anchor;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            if (ls.ButtonTextLabeled("LPR_SettingsFileNamePatternLabel".Translate(), ("LPR_FileNamePattern_" + fileNamePattern).Translate()))
+            {
+                List<FloatMenuOption> menuEntries = new List<FloatMenuOption>();
+                menuEntries.Add(new FloatMenuOption(("LPR_FileNamePattern_" + FileNamePattern.DateTime).Translate(), delegate
+                {
+                    fileNamePattern = FileNamePattern.DateTime;
+                }));
+                menuEntries.Add(new FloatMenuOption(("LPR_FileNamePattern_" + FileNamePattern.Numbered).Translate(), delegate
+                {
+                    fileNamePattern = FileNamePattern.Numbered;
+                }));
+                menuEntries.Add(new FloatMenuOption(("LPR_FileNamePattern_" + FileNamePattern.BothTmpCopy).Translate(), delegate
+                {
+                    fileNamePattern = FileNamePattern.BothTmpCopy;
+                }));
+                Find.WindowStack.Add(new FloatMenu(menuEntries));
+            }
+            // Restore original values
+            Text.Anchor = backupAnchor;
+
             ls.End();
         }
 
@@ -124,6 +151,7 @@ namespace ProgressRenderer
             Scribe_Values.Look(ref outputImageFixedHeight, "outputImageFixedHeight", DefaultOutputImageFixedHeight);
             Scribe_Values.Look(ref exportPath, "exportPath", DesktopPath);
             Scribe_Values.Look(ref createSubdirs, "createSubdirs", DefaultCreateSubdirs);
+            Scribe_Values.Look(ref fileNamePattern, "fileNamePattern", DefaultFileNamePattern);
         }
 
         private static string DesktopPath
