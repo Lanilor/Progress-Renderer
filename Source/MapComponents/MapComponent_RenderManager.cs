@@ -102,12 +102,12 @@ namespace ProgressRenderer
                 return;
             }
             // Show message window or print message
-            if (PRModSettings.showMessageBox && PRModSettings.encoding != "jpg_fluxthreaded")
+            if (PRModSettings.renderFeedback == RenderFeedback.Window && PRModSettings.encoding != "jpg_fluxthreaded")
             {
                 messageBox = new SmallMessageBox("LPR_Rendering".Translate());
                 Find.WindowStack.Add(messageBox);
             }
-            else
+            else if (PRModSettings.renderFeedback == RenderFeedback.Message)
             {
                 Messages.Message("LPR_Rendering".Translate(), MessageTypeDefOf.CautionInput, false);
             }

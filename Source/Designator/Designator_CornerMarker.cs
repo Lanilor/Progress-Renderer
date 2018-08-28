@@ -106,7 +106,28 @@ namespace ProgressRenderer
                 endZ += 1;
                 int distX = endX - startX;
                 int distZ = endZ - startZ;
+                string ratio = ((float)distX / distZ).ToString("0.###");
                 string messageRect = "LPR_MessageCornerMarkersRect".Translate(new object[] { distX, distZ });
+                if (distX * 3 == distZ * 4)
+                {
+                    messageRect += " " + "LPR_MessageCornerMarkersRectRatioDefined".Translate(new object[] { ratio, "4:3" });
+                }
+                else if (distX * 2 == distZ * 3)
+                {
+                    messageRect += " " + "LPR_MessageCornerMarkersRectRatioDefined".Translate(new object[] { ratio, "3:2" });
+                }
+                else if (distX * 10 == distZ * 16)
+                {
+                    messageRect += " " + "LPR_MessageCornerMarkersRectRatioDefined".Translate(new object[] { ratio, "16:10" });
+                }
+                else if (distX * 9 == distZ * 16)
+                {
+                    messageRect += " " + "LPR_MessageCornerMarkersRectRatioDefined".Translate(new object[] { ratio, "16:9" });
+                }
+                else
+                {
+                    messageRect += " " + "LPR_MessageCornerMarkersRectRatio".Translate(new object[] { ratio });
+                }
                 if (distZ <= 20)
                 {
                     messageRect += " " + "LPR_MessageCornerMarkesRectHeightTooLow".Translate();

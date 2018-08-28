@@ -3,7 +3,7 @@
 	<name>Progress Renderer</name>
 	<author>Lanilor</author>
 	<url>https://github.com/Lanilor/Progress-Renderer</url>
-	<targetVersion>1.0.0</targetVersion>
+	<targetVersion>0.19.0</targetVersion>
 	<description>
 &lt;size=20&gt;Progress Renderer (scheduled map renderings)&lt;/size&gt;
 
@@ -14,6 +14,6 @@ You can choose an interval from once a quadrum to hourly. Rendered images will b
 Place special corner marker designators to limit the area of what should be rendered. You can limit this to your base and even just simply extend it later if you base grows larger than planned.
 
 Based on the idea of Map Renderer by WIT (https://github.com/AaronCRobinson/MapRenderer)
-(Everything coded from scratch to work scheduled and with 1.0, which has the nice side effect of now being more performant and flexible.)
+(Everything coded from scratch to work scheduled and with B19/1.0, which has the nice side effect of now being more performant and flexible.)
 	</description>
 </ModMetaData>

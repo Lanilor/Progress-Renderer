@@ -6,11 +6,13 @@
 	<EveryHour>Every hour</EveryHour>
 
   <!-- Messages -->
-	<LPR_MessageCornerMarkerAmount>There now are {0} corner markers on this map.</LPR_MessageCornerMarkerAmount>
+	<LPR_MessageCornerMarkerAmount>There are now {0} corner markers on this map.</LPR_MessageCornerMarkerAmount>
 	<LPR_MessageCornerMarkerTooLess>Rendering needs 2 markers to limit the rendered area. Now the full map will be rendered.</LPR_MessageCornerMarkerTooLess>
 	<LPR_MessageCornerMarkerTooMany>Rendering will create and use a virtual rect around all markers. You may want to remove unnecessary ones.</LPR_MessageCornerMarkerTooMany>
 	<LPR_MessageCornerMarkerCorrect>Rendering will limit to the enclosed area.</LPR_MessageCornerMarkerCorrect>
 	<LPR_MessageCornerMarkersRect>Enclosing rect size is {0}x{1} cells.</LPR_MessageCornerMarkersRect>
+	<LPR_MessageCornerMarkersRectRatio>Aspect ratio is {0}.</LPR_MessageCornerMarkersRectRatio>
+	<LPR_MessageCornerMarkersRectRatioDefined>Aspect ratio is {0} ({1}).</LPR_MessageCornerMarkersRectRatioDefined>
 	<LPR_MessageCornerMarkesRectHeightTooLow>Height is too low. This will result in incorrect renderings. More than 20 cells height are recommended.</LPR_MessageCornerMarkesRectHeightTooLow>
 
   <!-- Designation -->
@@ -26,8 +28,13 @@
 	<LPR_SettingsCategory>Progress Renderer</LPR_SettingsCategory>
 	<LPR_SettingsEnabledLabel>Enabled</LPR_SettingsEnabledLabel>
 	<LPR_SettingsEnabledDescription>When enabled, this mod takes automatic renderings of current maps while playing and uses the settings below. You can temporary disable this here so you don't have to remove the mod each time.</LPR_SettingsEnabledDescription>
-	<LPR_SettingsShowMessageBoxLabel>Show message box</LPR_SettingsShowMessageBoxLabel>
-	<LPR_SettingsShowMessageBoxDescription>Show a message box on screen when the game is rendering the map. Deactivate this to only get a standard text message. (Useful when you just render a small area in a short interval and the message window interrupts playing.) (The message box is always deactivated when a multithreaded encoding method is selected.)</LPR_SettingsShowMessageBoxDescription>
+	<!--<LPR_SettingsShowMessageBoxLabel>Show message box</LPR_SettingsShowMessageBoxLabel>
+	<LPR_SettingsShowMessageBoxDescription>Show a message box on screen when the game is rendering the map. Deactivate this to only get a standard text message. (Useful when you just render a small area in a short interval and the message window interrupts playing.) (The message box is always deactivated when a multithreaded encoding method is selected.)</LPR_SettingsShowMessageBoxDescription>-->
+	<LPR_SettingsRenderFeedbackLabel>Render feedback</LPR_SettingsRenderFeedbackLabel>
+	<!--<LPR_SettingsRenderFeedbackDescription>Choose what kind of (visible) feedback you want to get when rendering starts.</LPR_SettingsRenderFeedbackDescription>-->
+	<LPR_RenderFeedback_None>None</LPR_RenderFeedback_None>
+	<LPR_RenderFeedback_Message>Message (in the top-left corner)</LPR_RenderFeedback_Message>
+	<LPR_RenderFeedback_Window>Window popup (like during autosave)</LPR_RenderFeedback_Window>
 	<LPR_SettingsRenderSettingsLabel>Render settings</LPR_SettingsRenderSettingsLabel>
 	<LPR_SettingsRenderSettingsDescription>Configure some optional graphical elements that should be included in the rendered images. The map will always be rendered while some temporary parts like your current selection, targeters or ui text and the mounse cursor are never included.</LPR_SettingsRenderSettingsDescription>
 	<LPR_SettingsRenderDesignationsLabel>Designations</LPR_SettingsRenderDesignationsLabel>

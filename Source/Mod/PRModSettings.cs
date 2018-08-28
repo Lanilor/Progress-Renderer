@@ -13,7 +13,7 @@ namespace ProgressRenderer
         public static string[] SupportedEncodings = { "png_unity", "jpg_unity", "jpg_fluxthreaded" };
         
         private static bool DefaultEnabled = true;
-        private static bool DefaultShowMessageBox = true;
+        private static RenderFeedback DefaultRenderFeedback = RenderFeedback.Window;
         private static bool DefaultRenderDesignations = false;
         private static bool DefaultRenderThingIcons = false;
         private static bool DefaultRenderGameConditions = true;
@@ -28,7 +28,7 @@ namespace ProgressRenderer
         private static FileNamePattern DefaultFileNamePattern = FileNamePattern.DateTime;
 
         public static bool enabled = DefaultEnabled;
-        public static bool showMessageBox = DefaultShowMessageBox;
+        public static RenderFeedback renderFeedback = DefaultRenderFeedback;
         public static bool renderDesignations = DefaultRenderDesignations;
         public static bool renderThingIcons = DefaultRenderThingIcons;
         public static bool renderGameConditions = DefaultRenderGameConditions;
@@ -61,7 +61,30 @@ namespace ProgressRenderer
 
             ls.CheckboxLabeled("LPR_SettingsEnabledLabel".Translate(), ref enabled, "LPR_SettingsEnabledDescription".Translate());
             ls.Gap(GapHeight);
-            ls.CheckboxLabeled("LPR_SettingsShowMessageBoxLabel".Translate(), ref showMessageBox, "LPR_SettingsShowMessageBoxDescription".Translate());
+
+            // Backup original values
+            TextAnchor backupAnchor = Text.Anchor;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            if (ls.ButtonTextLabeled("LPR_SettingsRenderFeedbackLabel".Translate(), ("LPR_RenderFeedback_" + renderFeedback).Translate()))
+            {
+                List<FloatMenuOption> menuEntries = new List<FloatMenuOption>();
+                menuEntries.Add(new FloatMenuOption(("LPR_RenderFeedback_" + RenderFeedback.None).Translate(), delegate
+                {
+                    renderFeedback = RenderFeedback.None;
+                }));
+                menuEntries.Add(new FloatMenuOption(("LPR_RenderFeedback_" + RenderFeedback.Message).Translate(), delegate
+                {
+                    renderFeedback = RenderFeedback.Message;
+                }));
+                menuEntries.Add(new FloatMenuOption(("LPR_RenderFeedback_" + RenderFeedback.Window).Translate(), delegate
+                {
+                    renderFeedback = RenderFeedback.Window;
+                }));
+                Find.WindowStack.Add(new FloatMenu(menuEntries));
+            }
+            // Restore original values
+            Text.Anchor = backupAnchor;
+
             ls.GapGapLine(GapHeight);
 
             ls.CheckboxGroupLabeled("LPR_SettingsRenderSettingsLabel".Translate(), "LPR_SettingsRenderSettingsDescription".Translate(), "LPR_SettingsRenderDesignationsLabel".Translate(), ref renderDesignations, "LPR_SettingsRenderDesignationsDescription".Translate(), "LPR_SettingsRenderThingIconsLabel".Translate(), ref renderThingIcons, "LPR_SettingsRenderThingIconsDescription".Translate());
@@ -76,7 +99,7 @@ namespace ProgressRenderer
             ls.GapGapLine(GapHeight);
 
             // Backup original values
-            TextAnchor backupAnchor = Text.Anchor;
+            backupAnchor = Text.Anchor;
             Text.Anchor = TextAnchor.MiddleLeft;
             if (ls.ButtonTextLabeled("LPR_SettingsEncodingLabel".Translate(), ("LPR_ImgEncoding_" + encoding).Translate()))
             {
@@ -138,7 +161,7 @@ namespace ProgressRenderer
         {
             base.ExposeData();
             Scribe_Values.Look(ref enabled, "enabled", DefaultEnabled);
-            Scribe_Values.Look(ref showMessageBox, "showMessageBox", DefaultShowMessageBox);
+            Scribe_Values.Look(ref renderFeedback, "renderFeedback", DefaultRenderFeedback);
             Scribe_Values.Look(ref renderDesignations, "renderDesignations", DefaultRenderDesignations);
             Scribe_Values.Look(ref renderThingIcons, "renderThingIcons", DefaultRenderThingIcons);
             Scribe_Values.Look(ref renderGameConditions, "renderGameConditions", DefaultRenderGameConditions);
