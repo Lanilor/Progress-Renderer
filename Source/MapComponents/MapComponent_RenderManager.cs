@@ -101,6 +101,14 @@ namespace ProgressRenderer
             {
                 return;
             }
+            // Update timing variables
+            lastRenderedHour = currHour;
+            lastRenderedCounter++;
+            // Check if rendering is enabled
+            if (!PRModSettings.enabled)
+            {
+                return;
+            }
             // Show message window or print message
             if (PRModSettings.renderFeedback == RenderFeedback.Window && PRModSettings.encoding != "jpg_fluxthreaded")
             {
@@ -112,12 +120,7 @@ namespace ProgressRenderer
                 Messages.Message("LPR_Rendering".Translate(), MessageTypeDefOf.CautionInput, false);
             }
             // Start rendering
-            lastRenderedHour = currHour;
-            lastRenderedCounter++;
-            if (PRModSettings.enabled)
-            {
-                Find.CameraDriver.StartCoroutine(DoRendering());
-            }
+            Find.CameraDriver.StartCoroutine(DoRendering());
         }
 
         public override void ExposeData()
@@ -467,8 +470,8 @@ namespace ProgressRenderer
             if (PRModSettings.createSubdirs)
             {
                 path = Path.Combine(path, Find.World.info.seedString);
-                Directory.CreateDirectory(path);
             }
+            Directory.CreateDirectory(path);
             // Create additional subdir for numbered symlinks
             if (addTmpSubdir)
             {
