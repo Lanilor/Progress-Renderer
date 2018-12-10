@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using FluxJpeg.Core;
 using FluxJpeg.Core.Encoder;
@@ -20,6 +19,9 @@ namespace ProgressRenderer
 
         private const int RenderTextureSize = 4096;
 
+        public static int nextGlobalRenderManagerTickOffset = 0;
+
+        private int tickOffset = -1;
         private int lastRenderedHour = -999;
         private int lastRenderedCounter = 0;
         private float rsOldStartX = -1f;
@@ -37,7 +39,8 @@ namespace ProgressRenderer
         private int imageTextureWidth;
         private int imageTextureHeight;
 
-        public bool renderingInt = false;
+        private bool manuallyTriggered = false;
+        private bool renderingInt = false;
         private bool encodingInt = false;
         Thread encodeThread;
         private bool ctrlEncodingPost = false;
@@ -55,15 +58,18 @@ namespace ProgressRenderer
             }
         }
 
-        /*
-        public override void FinalizeInit()
+        public override void FinalizeInit() // New map and after loading
         {
-            // New map and after loading
+            if (tickOffset < 0)
+            {
+                tickOffset = nextGlobalRenderManagerTickOffset;
+                nextGlobalRenderManagerTickOffset = (nextGlobalRenderManagerTickOffset + 5) % GenTicks.TickRareInterval;
+            }
         }
 
-        public override void MapGenerated()
+        /*
+        public override void MapGenerated() // Only new map
         {
-            // Only new map
         }
         */
 
@@ -80,7 +86,7 @@ namespace ProgressRenderer
         public override void MapComponentTick()
         {
             // TickRare
-            if (Find.TickManager.TicksGame % 250 != 0)
+            if (Find.TickManager.TicksGame % 250 != tickOffset)
             {
                 return;
             }
@@ -110,6 +116,41 @@ namespace ProgressRenderer
                 return;
             }
             // Show message window or print message
+            ShowCurrentRenderMessage();
+            // Start rendering
+            Find.CameraDriver.StartCoroutine(DoRendering());
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_Values.Look(ref lastRenderedHour, "lastRenderedHour", -999);
+            Scribe_Values.Look(ref lastRenderedCounter, "lastRenderedCounter", 0);
+            Scribe_Values.Look(ref rsOldStartX, "rsOldStartX", -1f);
+            Scribe_Values.Look(ref rsOldStartZ, "rsOldStartZ", -1f);
+            Scribe_Values.Look(ref rsOldEndX, "rsOldEndX", -1f);
+            Scribe_Values.Look(ref rsOldEndZ, "rsOldEndZ", -1f);
+            Scribe_Values.Look(ref rsTargetStartX, "rsTargetStartX", -1f);
+            Scribe_Values.Look(ref rsTargetStartZ, "rsTargetStartZ", -1f);
+            Scribe_Values.Look(ref rsTargetEndX, "rsTargetEndX", -1f);
+            Scribe_Values.Look(ref rsTargetEndZ, "rsTargetEndZ", -1f);
+            Scribe_Values.Look(ref rsCurrentPosition, "rsCurrentPosition", 1f);
+        }
+
+        public static void TriggerCurrentMapManualRendering(bool forceRenderFullMap = false)
+        {
+            Find.CurrentMap.GetComponent<MapComponent_RenderManager>().DoManualRendering(forceRenderFullMap);
+        }
+
+        public void DoManualRendering(bool forceRenderFullMap = false)
+        {
+            ShowCurrentRenderMessage();
+            manuallyTriggered = true;
+            Find.CameraDriver.StartCoroutine(DoRendering(forceRenderFullMap));
+        }
+
+        private void ShowCurrentRenderMessage()
+        {
             if (PRModSettings.renderFeedback == RenderFeedback.Window && PRModSettings.encoding != "jpg_fluxthreaded")
             {
                 messageBox = new SmallMessageBox("LPR_Rendering".Translate());
@@ -119,32 +160,14 @@ namespace ProgressRenderer
             {
                 Messages.Message("LPR_Rendering".Translate(), MessageTypeDefOf.CautionInput, false);
             }
-            // Start rendering
-            Find.CameraDriver.StartCoroutine(DoRendering());
         }
 
-        public override void ExposeData()
-        {
-            base.ExposeData();
-            Scribe_Values.Look<int>(ref lastRenderedHour, "lastRenderedHour", -999);
-            Scribe_Values.Look<int>(ref lastRenderedCounter, "lastRenderedCounter", 0);
-            Scribe_Values.Look<float>(ref rsOldStartX, "rsOldStartX", -1f);
-            Scribe_Values.Look<float>(ref rsOldStartZ, "rsOldStartZ", -1f);
-            Scribe_Values.Look<float>(ref rsOldEndX, "rsOldEndX", -1f);
-            Scribe_Values.Look<float>(ref rsOldEndZ, "rsOldEndZ", -1f);
-            Scribe_Values.Look<float>(ref rsTargetStartX, "rsTargetStartX", -1f);
-            Scribe_Values.Look<float>(ref rsTargetStartZ, "rsTargetStartZ", -1f);
-            Scribe_Values.Look<float>(ref rsTargetEndX, "rsTargetEndX", -1f);
-            Scribe_Values.Look<float>(ref rsTargetEndZ, "rsTargetEndZ", -1f);
-            Scribe_Values.Look<float>(ref rsCurrentPosition, "rsCurrentPosition", 1f);
-        }
-
-        private IEnumerator DoRendering()
+        private IEnumerator DoRendering(bool forceRenderFullMap = false)
         {
             yield return new WaitForFixedUpdate();
             if (renderingInt)
             {
-                Log.Error("Progress Renderer is still rendering an image while a new rendering was requested. This can lead to missing or wrong data.");
+                Log.Error("Progress Renderer is still rendering an image while a new rendering was requested. This can lead to missing or wrong data. (This can also happen in rare situations when you trigger manual rendering the exact same time as an automatic rendering happens. If you did that, just check your export folder if both renderings were done corrently and ignore this error.)");
             }
             renderingInt = true;
 
@@ -169,54 +192,61 @@ namespace ProgressRenderer
             float startZ = 0;
             float endX = map.Size.x;
             float endZ = map.Size.z;
-            List<Designation> cornerMarkers = map.designationManager.allDesignations.FindAll(des => des.def == DesignationDefOf.CornerMarker);
-            if (cornerMarkers.Count > 1)
+            if (!forceRenderFullMap)
             {
-                startX = endX;
-                startZ = endZ;
-                endX = 0;
-                endZ = 0;
-                foreach (Designation des in cornerMarkers)
+                List<Designation> cornerMarkers = map.designationManager.allDesignations.FindAll(des => des.def == DesignationDefOf.CornerMarker);
+                if (cornerMarkers.Count > 1)
                 {
-                    IntVec3 cell = des.target.Cell;
-                    if (cell.x < startX) { startX = cell.x; }
-                    if (cell.z < startZ) { startZ = cell.z; }
-                    if (cell.x > endX) { endX = cell.x; }
-                    if (cell.z > endZ) { endZ = cell.z; }
+                    startX = endX;
+                    startZ = endZ;
+                    endX = 0;
+                    endZ = 0;
+                    foreach (Designation des in cornerMarkers)
+                    {
+                        IntVec3 cell = des.target.Cell;
+                        if (cell.x < startX) { startX = cell.x; }
+                        if (cell.z < startZ) { startZ = cell.z; }
+                        if (cell.x > endX) { endX = cell.x; }
+                        if (cell.z > endZ) { endZ = cell.z; }
+                    }
+                    endX += 1;
+                    endZ += 1;
                 }
-                endX += 1;
-                endZ += 1;
             }
 
-            // Test if target render area changed to reset smoothing
-            if (rsTargetStartX != startX || rsTargetStartZ != startZ || rsTargetEndX != endX || rsTargetEndZ != endZ)
+            // Only use smoothing when rendering was not triggered manually
+            if (!manuallyTriggered)
             {
-                // Check if area was manually reset or uninitialized (-1) to not smooth
-                if (rsTargetStartX == -1f && rsTargetStartZ == -1f && rsTargetEndX == -1f && rsTargetEndZ == -1f)
+                // Test if target render area changed to reset smoothing
+                if (rsTargetStartX != startX || rsTargetStartZ != startZ || rsTargetEndX != endX || rsTargetEndZ != endZ)
                 {
-                    rsCurrentPosition = 1f;
+                    // Check if area was manually reset or uninitialized (-1) to not smooth
+                    if (rsTargetStartX == -1f && rsTargetStartZ == -1f && rsTargetEndX == -1f && rsTargetEndZ == -1f)
+                    {
+                        rsCurrentPosition = 1f;
+                    }
+                    else
+                    {
+                        rsCurrentPosition = 1f / (PRModSettings.smoothRenderAreaSteps + 1);
+                    }
+                    rsOldStartX = rsTargetStartX;
+                    rsOldStartZ = rsTargetStartZ;
+                    rsOldEndX = rsTargetEndX;
+                    rsOldEndZ = rsTargetEndZ;
+                    rsTargetStartX = startX;
+                    rsTargetStartZ = startZ;
+                    rsTargetEndX = endX;
+                    rsTargetEndZ = endZ;
                 }
-                else
+                // Apply smoothing to render area
+                if (rsCurrentPosition < 1f)
                 {
-                    rsCurrentPosition = 1f / (PRModSettings.smoothRenderAreaSteps + 1);
+                    startX = rsOldStartX + (rsTargetStartX - rsOldStartX) * rsCurrentPosition;
+                    startZ = rsOldStartZ + (rsTargetStartZ - rsOldStartZ) * rsCurrentPosition;
+                    endX = rsOldEndX + (rsTargetEndX - rsOldEndX) * rsCurrentPosition;
+                    endZ = rsOldEndZ + (rsTargetEndZ - rsOldEndZ) * rsCurrentPosition;
+                    rsCurrentPosition += 1f / (PRModSettings.smoothRenderAreaSteps + 1);
                 }
-                rsOldStartX = rsTargetStartX;
-                rsOldStartZ = rsTargetStartZ;
-                rsOldEndX = rsTargetEndX;
-                rsOldEndZ = rsTargetEndZ;
-                rsTargetStartX = startX;
-                rsTargetStartZ = startZ;
-                rsTargetEndX = endX;
-                rsTargetEndZ = endZ;
-            }
-            // Apply smoothing to render area
-            if (rsCurrentPosition < 1f)
-            {
-                startX = rsOldStartX + (rsTargetStartX - rsOldStartX) * rsCurrentPosition;
-                startZ = rsOldStartZ + (rsTargetStartZ - rsOldStartZ) * rsCurrentPosition;
-                endX = rsOldEndX + (rsTargetEndX - rsOldEndX) * rsCurrentPosition;
-                endZ = rsOldEndZ + (rsTargetEndZ - rsOldEndZ) * rsCurrentPosition;
-                rsCurrentPosition += 1f / (PRModSettings.smoothRenderAreaSteps + 1);
             }
 
             float distX = endX - startX;
@@ -372,6 +402,7 @@ namespace ProgressRenderer
             imageTextureHeight = 0;
             
             // Signal finished encoding
+            manuallyTriggered = false;
             encodingInt = false;
 
             // Hide message box
@@ -396,9 +427,11 @@ namespace ProgressRenderer
 
         private void SaveUnityEncoding(byte[] encodedImage)
         {
+            // Create file and save encoded image
             string filePath = CreateCurrentFilePath();
             File.WriteAllBytes(filePath, encodedImage);
-            if (PRModSettings.fileNamePattern == FileNamePattern.BothTmpCopy)
+            // Create tmp copy to file if needed
+            if (!manuallyTriggered && PRModSettings.fileNamePattern == FileNamePattern.BothTmpCopy)
             {
                 File.Copy(filePath, CreateFilePath(FileNamePattern.Numbered, true));
             }
@@ -408,6 +441,10 @@ namespace ProgressRenderer
         private void EncodeFluxJpeg()
         {
             Log.Message("0 - start");
+            // Get all needed data which could collide as fast as possible
+            bool localManuallyTriggered = manuallyTriggered;
+            string filePath = CreateCurrentFilePath();
+            // Convert temp data to local raw data
             byte[][,] rawImage = new byte[3][,];
             Log.Message("1");
             rawImage[0] = new byte[imageTextureWidth, imageTextureHeight];
@@ -425,24 +462,26 @@ namespace ProgressRenderer
                 }
             }
             Log.Message("3 - post raw");
-            // TODO: Hier invoke zum leeren der textur (oder aller tmp daten?)
+            // Tmp cleanup
+            ctrlEncodingPost = true;
+            // Encode raw data and save the final image
             ColorModel model = new ColorModel { colorspace = FluxJpeg.Core.ColorSpace.RGB };
             Log.Message("4");
             FluxJpeg.Core.Image image = new FluxJpeg.Core.Image(model, rawImage);
             Log.Message("5 - post image");
-            string filePath = CreateCurrentFilePath();
             FileStream fileStream = new FileStream(filePath, FileMode.Create);
             Log.Message("6 . post fs");
             JpegEncoder encoder = new JpegEncoder(image, 75, fileStream);
             Log.Message("7 - post encode");
             encoder.Encode();
             Log.Message("8 - post save");
+            // Local cleanup
             fileStream.Dispose();
             image = null;
             rawImage = null;
             Log.Message("end - 9");
             // Create tmp copy to file if needed
-            if (PRModSettings.fileNamePattern == FileNamePattern.BothTmpCopy)
+            if (!localManuallyTriggered && PRModSettings.fileNamePattern == FileNamePattern.BothTmpCopy)
             {
                 File.Copy(filePath, CreateFilePath(FileNamePattern.Numbered, true));
             }
@@ -450,7 +489,7 @@ namespace ProgressRenderer
 
         private string CreateCurrentFilePath()
         {
-            return CreateFilePath(PRModSettings.fileNamePattern);
+            return CreateFilePath(manuallyTriggered ? FileNamePattern.DateTime : PRModSettings.fileNamePattern);
         }
 
         private string CreateFilePath(FileNamePattern fileNamePattern, bool addTmpSubdir = false)
@@ -472,6 +511,12 @@ namespace ProgressRenderer
                 path = Path.Combine(path, Find.World.info.seedString);
             }
             Directory.CreateDirectory(path);
+            // Add subdir for manually triggered renderings
+            if (manuallyTriggered)
+            {
+                path = Path.Combine(path, "manually");
+                Directory.CreateDirectory(path);
+            }
             // Create additional subdir for numbered symlinks
             if (addTmpSubdir)
             {

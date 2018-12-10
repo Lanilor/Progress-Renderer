@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- Map play -->
+
+	<KeyBindingDef ParentName="GameKeyBinding">
+		<defName>LPR_ManualRendering</defName>
+		<label>PR: Manual rendering</label>
+		<defaultKeyCodeA>Alpha9</defaultKeyCodeA>
+	</KeyBindingDef>
+
+	<KeyBindingDef ParentName="GameKeyBinding">
+		<defName>LPR_ManualRendering_ForceFullMap</defName>
+		<label>PR: Manual rendering (full map)</label>
+		<defaultKeyCodeA>Alpha0</defaultKeyCodeA>
+	</KeyBindingDef>
+
+</Defs>
